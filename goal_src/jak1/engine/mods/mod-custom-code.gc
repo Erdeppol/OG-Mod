@@ -1330,19 +1330,30 @@
                   ;; zero the slot the same way bh-clear-bullets does
                   (set! (-> *bh-handles* i) (the-as uint 0))))))))))
   0)
+
+(define *bh-in-cannon* #f)
+(defun bh-update-cannon ()
+  (let* ((st (if *target* (-> *target* next-state) #f))
+         (now (and st (eq? st target-periscope))))
+    (when (not (eq? now *bh-in-cannon*))
+      (set! *bh-in-cannon* (if now #t #f))
+      (bh-clear-bullets)))
+  0)
+  
 (define *bh-last-movie* #t)
 (defun bullet-hell-update ()
+  (bh-update-cannon)
+  (bh-update-launch)
   (when (> bh-want-to-clear 0)
     (set! bh-want-to-clear (- bh-want-to-clear 1))
     (when (= 0 bh-want-to-clear)
       (bh-clear-bullets)
     )
   )
-
   (when *bh-launched*
   (
     bh-clear-above-jak (meters 70) (meters 3))
-    (set! *bh-resume-time* (the-as int (max (+ (current-time) (seconds 0.7)) *bh-resume-time*)))
+    (set! *bh-resume-time* (the-as int (max (+ (current-time) (seconds 0.85)) *bh-resume-time*)))
   )
 
   ;; Movie no spam
