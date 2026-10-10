@@ -888,8 +888,8 @@
           (bh-ground
             *bh-center*
             (+ 5 (the int (* 3.0 bh-difficulty-scale-half)))  ;; Amount
-            (/ (meters 7.0) bh-difficulty-scale-third)         ;; Safe space
-            (/ (meters 12.5) bh-difficulty-scale-half)        ;; Distance Spacing
+            (/ (meters 8.0) bh-difficulty-scale-third)         ;; Safe space
+            (/ (meters 13.0) bh-difficulty-scale-half)        ;; Distance Spacing
             (meters 2.0)                                      ;; Height
             (- 2.5 (* 0.5 bh-difficulty-eff))                 ;; Lifetime
             (* (meters 3.0) bh-difficulty-scale-half)         ;; Speed
@@ -1340,7 +1340,10 @@
   )
 
   (when *bh-launched*
-  (bh-clear-above-jak (meters 70) (meters 3)))
+  (
+    bh-clear-above-jak (meters 70) (meters 3))
+    (set! *bh-resume-time* (the-as int (max (+ (current-time) (seconds 0.7)) *bh-resume-time*)))
+  )
 
   ;; Movie no spam
   (let ((m (if (-> *setting-control* current movie) #t #f)))
@@ -1527,10 +1530,10 @@
     
       (when from-cache?
         (bh-orb-bullet-ring
-          (meters 18.0)                              ;; radius
+          (meters 20.0)                              ;; radius
           10922.0                                     ;; step: 65536/6, 6 bullets per full circle
           (- 2.6 (* 0.65 bh-difficulty-eff))         ;; lifetime
-          (* (meters 7.0) bh-difficulty-scale-third))     ;; speed
+          (* (meters 6.0) bh-difficulty-scale-third))     ;; speed
       )
       (when (and (not (bh-jak-launching?)) (not from-cache?))
         (pickup-collectable! (-> *target* fact) (pickup-type eco-pill) 1.0 (the-as handle #f))
