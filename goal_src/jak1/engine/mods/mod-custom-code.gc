@@ -876,9 +876,9 @@
           )
         ((17)
           (bh-side-pair
-            (/ (meters 23.0) bh-difficulty-scale-third)     ;; Distance
+            (/ (meters 23.5) bh-difficulty-scale-third)     ;; Distance
             (/ (meters 8.5) bh-difficulty-scale-quartre)    ;; Height
-            (/ (meters 20.0) bh-difficulty-scale-third)     ;; Side distance
+            (/ (meters 20.5) bh-difficulty-scale-third)     ;; Side distance
             (- 2.7 (* 0.63 bh-difficulty-eff))                  ;; Lifetime
             (* (meters 12.0) bh-difficulty-scale-quartre)     ;; Speed
             (+ 35.0 bh-projectile-homing)                   ;; Homing
@@ -889,7 +889,7 @@
             *bh-center*
             (+ 5 (the int (* 3.0 bh-difficulty-scale-half)))  ;; Amount
             (/ (meters 7.0) bh-difficulty-scale-third)         ;; Safe space
-            (/ (meters 12.0) bh-difficulty-scale-half)        ;; Distance Spacing
+            (/ (meters 12.5) bh-difficulty-scale-half)        ;; Distance Spacing
             (meters 2.0)                                      ;; Height
             (- 2.5 (* 0.5 bh-difficulty-eff))                 ;; Lifetime
             (* (meters 3.0) bh-difficulty-scale-half)         ;; Speed
@@ -900,7 +900,7 @@
           (bh-box
             *bh-center*
             (the int (* 3.0 bh-difficulty-scale-third))      ;; Amount
-            (/ (meters 12.0) bh-difficulty-scale-quartre)    ;; Distance
+            (/ (meters 13.0) bh-difficulty-scale-quartre)    ;; Distance
             (- 2.6 (* 0.5 bh-difficulty-eff))                    ;; Lifetime
             (* (meters 1.0) bh-difficulty-scale-half)        ;; Speed
             (+ 10.0 (* bh-projectile-homing 0.25))           ;; Homing
@@ -911,12 +911,12 @@
           (bh-trail-start
             (- 2.0 (* 0.25 bh-difficulty-eff))                    ;; Duration
             (/ 0.4 bh-difficulty-scale-half)                  ;; Rate
-            (/ 0.75 bh-difficulty-scale-third)               ;; Delay
+            (/ 0.8 bh-difficulty-scale-third)               ;; Delay
             (- 1.25 (* 0.25 bh-difficulty-eff))                   ;; Lifetime
             (* (meters 4.4) bh-difficulty-scale-lesser)              ;; Speed
             (+ 20.0 (* bh-projectile-homing))                 ;; Homing
             )
-          (set! bh-next-attack-time (+ bh-next-attack-time (seconds 1.0)))
+          (set! bh-next-attack-time (+ bh-next-attack-time (seconds 1.2)))
         )
         ((7)
           (bh-train
@@ -1306,7 +1306,30 @@
       )
     )
   0)
-
+(define *bh-launched* #f)
+(defun bh-update-launch ()
+  (let ((name (if (and *target* (-> *target* next-state))
+                (-> *target* next-state name)
+                #f)))
+    (cond
+      ((= name 'target-launch) (set! *bh-launched* #t))
+      ((= name 'target-duck-high-jump-jump) #f)   ; keep the flag as it is
+      (else (set! *bh-launched* #f))))
+  0)
+(defun bh-clear-above-jak ((radius float) (min-above float))
+  (when *target*
+    (let ((jpos (-> *target* control trans)))
+      (dotimes (i 512)
+        (when (nonzero? (-> *bh-handles* i))
+          (let ((proc (handle->process (the-as handle (-> *bh-handles* i)))))
+            (when proc
+              (let ((bpos (-> (the-as projectile proc) root trans)))
+                (when (and (> (- (-> bpos y) (-> jpos y)) min-above)
+                           (< (vector-vector-xz-distance bpos jpos) radius))
+                  (deactivate proc)
+                  ;; zero the slot the same way bh-clear-bullets does
+                  (set! (-> *bh-handles* i) (the-as uint 0))))))))))
+  0)
 (define *bh-last-movie* #t)
 (defun bullet-hell-update ()
   (when (> bh-want-to-clear 0)
@@ -1315,6 +1338,9 @@
       (bh-clear-bullets)
     )
   )
+
+  (when *bh-launched*
+  (bh-clear-above-jak (meters 12) (meters 1)))
 
   ;; Movie no spam
   (let ((m (if (-> *setting-control* current movie) #t #f)))
@@ -1492,6 +1518,7 @@
   (and *target*
        (let ((st (-> *target* next-state)))
          (and st (= (-> st name) 'target-launch)))))
+
 
 (defun runs-on-orb-pickup ((parent process-tree))
   (when *target*
