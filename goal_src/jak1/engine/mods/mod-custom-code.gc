@@ -1340,7 +1340,7 @@
   )
 
   (when *bh-launched*
-  (bh-clear-above-jak (meters 12) (meters 1)))
+  (bh-clear-above-jak (meters 70) (meters 3)))
 
   ;; Movie no spam
   (let ((m (if (-> *setting-control* current movie) #t #f)))
